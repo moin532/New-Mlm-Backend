@@ -1,6 +1,6 @@
 const User = require("../models/userModel");
 const BankInfo = require("../models/BankInformation");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 exports.LoginUser = async (req, res, next) => {
