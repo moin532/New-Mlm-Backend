@@ -26,4 +26,4 @@ const profileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("LLMProfile", profileSchema);
+module.exports = mongoose.model("LllmProfile", profileSchema);

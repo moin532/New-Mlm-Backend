@@ -1,39 +1,51 @@
-// const Profile = require("../models/myProfileInfo");
+// routes/profile.js
+const express = require("express");
+const router = express.Router();
+const upload = require("../middleware/upload");
+const Profile = require("../models/myProfileInfo");
 
-// export const ProfilImageUpload = async (req, res) => {
-//   try {
-//     const {
-//       nomineeName,
-//       nomineeRelation,
-//       nomineePanCardNumber,
-//       nomineeAadhaarCardNumber,
-//       userId,
-//     } = req.body;
+// Upload multiple images
+router.post(
+  "/upload",
+  upload.fields([
+    { name: "panCardImage" },
+    { name: "aadhaarCardFrontImage" },
+    { name: "aadhaarCardBackImage" },
+    { name: "bankDocumentImage" },
+    { name: "nomineePanCardImage" },
+    { name: "nomineeAadhaarCardFrontImage" },
+    { name: "nomineeAadhaarCardBackImage" },
+    { name: "nomineeBankDocumentImage" },
+  ]),
+  async (req, res) => {
+    try {
+      const files = req.files;
 
-//     const newProfile = new Profile({
-//       userId: userId, // assuming you have `req.user` from auth middleware
-//       panCardImage: req.files?.panCardImage?.[0]?.path,
-//       aadhaarCardFrontImage: req.files?.aadhaarCardFrontImage?.[0]?.path,
-//       aadhaarCardBackImage: req.files?.aadhaarCardBackImage?.[0]?.path,
-//       bankDocumentImage: req.files?.bankDocumentImage?.[0]?.path,
-//       nominee: {
-//         name: nomineeName,
-//         relation: nomineeRelation,
-//         panCardNumber: nomineePanCardNumber,
-//         aadhaarCardNumber: nomineeAadhaarCardNumber,
-//         panCardImage: req.files?.nomineePanCardImage?.[0]?.path,
-//         aadhaarCardFrontImage:
-//           req.files?.nomineeAadhaarCardFrontImage?.[0]?.path,
-//         aadhaarCardBackImage: req.files?.nomineeAadhaarCardBackImage?.[0]?.path,
-//         bankDocumentImage: req.files?.nomineeBankDocumentImage?.[0]?.path,
-//       },
-//     });
+      const profile = new Profile({
+        userId: req.body.userId,
+        panCardImage: files.panCardImage?.[0]?.path,
+        aadhaarCardFrontImage: files.aadhaarCardFrontImage?.[0]?.path,
+        aadhaarCardBackImage: files.aadhaarCardBackImage?.[0]?.path,
+        bankDocumentImage: files.bankDocumentImage?.[0]?.path,
+        nominee: {
+          name: req.body.nomineeName,
+          relation: req.body.nomineeRelation,
+          panCardNumber: req.body.nomineePanCardNumber,
+          aadhaarCardNumber: req.body.nomineeAadhaarCardNumber,
+          panCardImage: files.nomineePanCardImage?.[0]?.path,
+          aadhaarCardFrontImage: files.nomineeAadhaarCardFrontImage?.[0]?.path,
+          aadhaarCardBackImage: files.nomineeAadhaarCardBackImage?.[0]?.path,
+          bankDocumentImage: files.nomineeBankDocumentImage?.[0]?.path,
+        },
+      });
 
-//     await newProfile.save();
+      await profile.save();
+      res.status(201).json({ message: "Profile saved successfully", profile });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Upload failed", error });
+    }
+  }
+);
 
-//     res.status(201).json({ success: true, profile: newProfile });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ success: false, message: "Server error" });
-//   }
-// };
+module.exports = router;

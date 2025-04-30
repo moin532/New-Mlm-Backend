@@ -5,7 +5,7 @@ const BankInfo = new mongoose.Schema({
   AccountNumber: String,
   IFSC: String,
   BankName: String,
-  BankBrnach: String,
+  BankBranch: String,
   AccountType: String,
   userId: String,
 });

@@ -13,14 +13,23 @@ const userSchema = new mongoose.Schema(
     panCard: { type: String, required: true, unique: true },
     aadhaarCard: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
-    nomineeName: { type: String, required: false },
     nomineRelation: { type: String, required: false },
-    nominePanCard: { type: String, required: false },
-    nomineAadharCard: { type: String, required: false },
     Address: { type: String, required: false },
     State: { type: String, required: false },
     Pincode: { type: String, required: false },
     gender: { type: String, enum: ["Male", "Female"] },
+
+    referId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserMLmLipo", // or your actual model name
+      default: null,
+    },
+    referrals: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "UserMLmLipo",
+      },
+    ],
   },
   { timestamps: true }
 );

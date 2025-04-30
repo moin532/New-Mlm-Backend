@@ -17,6 +17,6 @@ const multipleUpload = upload.fields([
 ]);
 
 const { ProfilImageUpload } = require("../controller/ProfileController");
-// router.route("/profile/update").post(multipleUpload, ProfilImageUpload);
+router.route("/profile/update").post(multipleUpload, ProfilImageUpload);
 
 module.exports = router;
