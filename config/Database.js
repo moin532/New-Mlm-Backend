@@ -4,10 +4,8 @@ const url = process.env.DB_URI
 
 const connectDatabase = async () => {
     await mongoose.connect(url, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useCreateIndex: true,
-        useFindAndModify:false,
+          useNewUrlParser: true,
+           useUnifiedTopology: true,
         serverSelectionTimeoutMS: 10000,
       })
       .then((data) => {
