@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/upload");
 const Profile = require("../models/myProfileInfo");
-
+// http://localhost:4000/uploads/1746082767275-700115144.png
 // Upload multiple images
 router.post(
   "/upload",
@@ -17,9 +17,12 @@ router.post(
     { name: "nomineeAadhaarCardBackImage" },
     { name: "nomineeBankDocumentImage" },
   ]),
+
   async (req, res) => {
     try {
       const files = req.files;
+
+      console.log("Uploaded files:", files);
 
       const profile = new Profile({
         userId: req.body.userId,

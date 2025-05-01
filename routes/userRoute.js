@@ -20,11 +20,11 @@ router.route("/login").post(multer().none(), LoginUser);
 router.route("/register").post(multer().none(), Register);
 
 router.route("/me/:id").get(multer().none(), LoadUser);
-router.route("/update/:id").get(multer().none(), UpdateUser);
+router.route("/update/:id").post(multer().none(), UpdateUser);
 router.route("/update/password").get(multer().none(), changePassword);
 router.route("/bank/add").post(multer().none(), AddBankInfo);
 // router.route("goDownLine/:id").post(multer().none(), getGoDownline);
 router.route("/getRefral/:id").get(multer().none(), getReferralTree);
-router.route("/get/BankInfo").get(multer().none(), GetBankInfo);
+router.route("/get/BankInfo").post(multer().none(), GetBankInfo);
 
 module.exports = router;

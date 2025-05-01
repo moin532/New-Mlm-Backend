@@ -1,15 +1,16 @@
 const User = require("../models/userModel");
+const Profile = require("../models/myProfileInfo");
 const BankInfo = require("../models/BankInformation");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 exports.LoginUser = async (req, res, next) => {
   try {
-    const { phone, password } = req.body;
+    const { UUID, password } = req.body;
 
-    console.log(req.body);
+    console.log(UUID, password);
 
-    const user = await User.findOne({ mobile: phone }).select("+passwordHash");
+    const user = await User.findOne({ UUID: UUID }).select("+passwordHash");
 
     if (!user) {
       return res.status(400).json({ message: "User not found" });
@@ -44,18 +45,27 @@ exports.LoginUser = async (req, res, next) => {
   }
 };
 
+const generateUUID = () => {
+  const randomDigits = Math.floor(100000 + Math.random() * 900000);
+  console.log(randomDigits);
+  return `LS${randomDigits}`;
+};
+// Helper to generate a random 7-digit password
+const generatePassword = () => {
+  return Math.floor(1000000 + Math.random() * 9000000).toString(); // Ensure it's a valid string
+};
+
 exports.Register = async (req, res) => {
   try {
     const {
       name,
-      sponsorId, // this is the _id of the user who referred
+      sponsorId,
       mobile,
       email,
       address,
       nomineeName,
       panCard,
       aadhaarCard,
-      password,
     } = req.body;
 
     const existingUser = await User.findOne({ mobile });
@@ -65,13 +75,28 @@ exports.Register = async (req, res) => {
         .json({ message: "User with this mobile number already exists" });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const UUID = generateUUID();
+    const plainPassword = generatePassword();
+    const passwordHash = await bcrypt.hash(plainPassword, 10);
 
-    // Create user with referId assigned
+    let referId = null;
+    let storedSponsorId = "";
+
+    console.log(storedSponsorId, "stordSponserID");
+    if (sponsorId) {
+      const sponsor = await User.findOne({
+        UUID: sponsorId,
+      });
+
+      if (sponsor) {
+        referId = sponsor?.UUID;
+        storedSponsorId = sponsorId;
+      }
+    }
     const user = new User({
       name,
-      referId: sponsorId, // ✅ correct field
-      sponsorId: sponsorId, // optional, keep only if used separately
+      referId, // ObjectId or null
+      sponsorId: storedSponsorId, // string or empty
       mobile,
       email,
       address,
@@ -79,13 +104,15 @@ exports.Register = async (req, res) => {
       panCard,
       aadhaarCard,
       passwordHash,
+      UUID,
     });
 
     await user.save();
 
-    // Add this user to sponsor's referrals list
-    if (sponsorId) {
-      const sponsor = await User.findById(sponsorId);
+    if (referId) {
+      const sponsor = await User.findById(referId);
+
+      console.log("Sponsor Data:", referId);
       if (sponsor) {
         sponsor.referrals.push(user._id);
         await sponsor.save();
@@ -107,10 +134,13 @@ exports.Register = async (req, res) => {
         mobile: user.mobile,
         name: user.name,
         referId: user.referId,
+        sponsorId: user.sponsorId,
+        UUID: user.UUID,
+        password: plainPassword,
       },
     });
   } catch (error) {
-    console.error("Register error:", error);
+    console.error("Register error:", error.message);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -123,9 +153,11 @@ exports.LoadUser = async (req, res) => {
   try {
     const id = req.params.id;
     const usere = await User.findById(id);
+    const profile = await Profile.findOne({ userId: id });
 
     res.status(200).json({
       usere,
+      profile,
     });
   } catch (error) {
     res.status(500).json({
@@ -183,36 +215,24 @@ exports.UpdateUser = async (req, res) => {
       });
     }
 
-    // Handle password update
-    if (req.body.password) {
-      await user.setPassword(req.body.password);
-    }
-
-    // List of allowed fields to update
     const allowedUpdates = [
-      "name",
-      "sponsorId",
-      "mobile",
-      "email",
-      "address",
-      "nomineeName",
-      "panCard",
-      "aadhaarCard",
-      "nomineRelation",
-      "Address",
-      "State",
-      "Pincode",
+      "city",
+      "dateOfBirth",
       "gender",
+      "pincode",
+      "state",
     ];
 
-    // Update allowed fields
     allowedUpdates.forEach((field) => {
       if (req.body[field] !== undefined) {
-        user[field] = req.body[field];
+        if (field === "state" && typeof req.body[field] === "object") {
+          user[field] = req.body[field].value;
+        } else {
+          user[field] = req.body[field];
+        }
       }
     });
 
-    // Save the updated user
     const updatedUser = await user.save();
 
     res.status(200).json({
@@ -239,9 +259,13 @@ exports.AddBankInfo = async (req, res) => {
       userId,
     } = req.body;
 
-    console.log(req.body);
-
-    const user = new BankInfo({
+    if (!AccountNumber) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all fields",
+      });
+    }
+    const Bankuser = await new BankInfo({
       AccountHolderName,
       AccountNumber,
       IFSC,
@@ -251,7 +275,7 @@ exports.AddBankInfo = async (req, res) => {
       userId,
     });
 
-    await user.save();
+    await Bankuser.save();
 
     res.status(201).json({
       success: true,
@@ -289,40 +313,6 @@ exports.GetBankInfo = async (req, res) => {
       .json({ success: false, message: "Server error", error: error.message });
   }
 };
-
-// Treeeee
-// exports.getGoDownline = async (req, res) => {
-//   try {
-//     const userId = req.params.id || req.user.id; // If using auth middleware
-
-//     // Find the user and populate only direct referrals (G0)
-//     const user = await User.findById(userId).populate({
-//       path: "referrals",
-//       select: "name mobile email", // return only needed fields
-//     });
-
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       sponsor: {
-//         id: user._id,
-//         name: user.name,
-//         mobile: user.mobile,
-//       },
-//       directReferrals: user.referrals,
-//     });
-//   } catch (error) {
-//     console.error("G0 downline error:", error);
-//     res
-//       .status(500)
-//       .json({ message: "Failed to fetch G0 downline", error: error.message });
-//   }
-// };
-
-// getReferralTree
 
 exports.getReferralTree = async (req, res) => {
   try {

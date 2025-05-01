@@ -1,11 +1,12 @@
 // models/User.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     sponsorId: { type: String, required: false },
+
+    UUID: { type: String },
     mobile: { type: String, required: true, unique: true },
     email: { type: String, required: true },
     address: { type: String, required: true },
@@ -15,12 +16,14 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true },
     nomineRelation: { type: String, required: false },
     Address: { type: String, required: false },
-    State: { type: String, required: false },
-    Pincode: { type: String, required: false },
-    gender: { type: String, enum: ["Male", "Female"] },
-
+    city: { type: String, required: false },
+    state: { type: String, required: false },
+    pincode: { type: String, required: false },
+    gender: { type: String, required: false },
+    dateOfBirth: { type: String, required: false },
+    active: { type: String, default: "false" },
     referId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "UserMLmLipo", // or your actual model name
       default: null,
     },
