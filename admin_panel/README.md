@@ -16,23 +16,6 @@ This version uses plain JavaScript (JSX) and basic CSS, removing TypeScript and 
 *   **Image Upload:** Supports uploading multiple images when adding a product, utilizing the backend's Multer setup via the admin endpoint.
 *   **Simple Styling:** Uses basic CSS defined in `src/index.css` for layout and styling.
 
-## Project Structure (Simplified)
-
-```
-/home/ubuntu/admin_panel/
-├── public/
-├── src/
-│   ├── components/         # Reusable UI components (ProtectedRoute.jsx)
-│   ├── pages/              # Page components (LoginPage.jsx, ProductsPage.jsx, etc.)
-│   ├── services/           # API interaction logic (authService.js, productService.js, AuthContext.js)
-│   ├── App.jsx             # Main application component with routing
-│   ├── index.css           # Basic global styles
-│   └── main.jsx            # Application entry point
-├── .gitignore
-├── package.json
-├── pnpm-lock.yaml
-└── vite.config.js        # Simplified Vite configuration
-```
 
 ## Key Technologies Used
 
@@ -49,19 +32,17 @@ This version uses plain JavaScript (JSX) and basic CSS, removing TypeScript and 
     *   Node.js and pnpm installed.
     *   The corresponding backend server (with the separate Admin module) must be running (likely on `http://localhost:4000`).
 
-2.  **Installation:**
-    *   Navigate to the project directory: `cd /path/to/admin_panel` (after extracting the zip)
-    *   Install dependencies: `pnpm install`
 
-3.  **Configuration:**
+
+2.  **Configuration:**
     *   The backend API URL is hardcoded in `src/services/authService.js` and `src/services/productService.js` as `http://localhost:4000/api/v1`. Ensure this matches your running backend.
     *   Product images are assumed to be served by the backend at the root `/uploads` path (e.g., `http://localhost:4000/uploads/imagename.png`). Verify this matches your backend setup in `app.js` (`app.use("/uploads", express.static("uploads"));`).
 
-4.  **Running the Development Server:**
-    *   Start the dev server: `pnpm run dev`
+3.  **Running the Development Server:**
+    *   Start the dev server: `npm run dev`
     *   The application will typically be available at `http://localhost:5173`.
 
-5.  **Admin Login:**
+4.  **Admin Login:**
     *   Use the default admin credentials configured in the backend (`server.js`):
         *   Username: `admin`
         *   Password: `password123`
