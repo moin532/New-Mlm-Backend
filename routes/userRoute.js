@@ -24,7 +24,7 @@ router.route("/update/:id").post(multer().none(), UpdateUser);
 router.route("/update/password").get(multer().none(), changePassword);
 router.route("/bank/add").post(multer().none(), AddBankInfo);
 // router.route("goDownLine/:id").post(multer().none(), getGoDownline);
-router.route("/getRefral/:id").get(multer().none(), getReferralTree);
+router.route("/getRefral/:id").post(multer().none(), getReferralTree);
 router.route("/get/BankInfo").post(multer().none(), GetBankInfo);
 
 module.exports = router;

@@ -22,14 +22,11 @@ const userSchema = new mongoose.Schema(
     gender: { type: String, required: false },
     dateOfBirth: { type: String, required: false },
     active: { type: String, default: "false" },
-    referId: {
-      type: String,
-      ref: "UserMLmLipo", // or your actual model name
-      default: null,
-    },
+    referId: { type: String, default: null },
+
     referrals: [
       {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String, // UUID instead of ObjectId
         ref: "UserMLmLipo",
       },
     ],

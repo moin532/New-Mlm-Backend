@@ -59,7 +59,7 @@ exports.Register = async (req, res) => {
   try {
     const {
       name,
-      sponsorId,
+      sponsorId, // UUID of the sponsor
       mobile,
       email,
       address,
@@ -68,6 +68,7 @@ exports.Register = async (req, res) => {
       aadhaarCard,
     } = req.body;
 
+    // Check if user exists by mobile
     const existingUser = await User.findOne({ mobile });
     if (existingUser) {
       return res
@@ -75,28 +76,28 @@ exports.Register = async (req, res) => {
         .json({ message: "User with this mobile number already exists" });
     }
 
-    const UUID = generateUUID();
+    const UUID = generateUUID(); // your own UUID generator
     const plainPassword = generatePassword();
     const passwordHash = await bcrypt.hash(plainPassword, 10);
 
     let referId = null;
-    let storedSponsorId = "";
 
-    console.log(storedSponsorId, "stordSponserID");
+    // If sponsorId is provided (a UUID), find the user
     if (sponsorId) {
-      const sponsor = await User.findOne({
-        UUID: sponsorId,
-      });
+      const sponsor = await User.findOne({ UUID: sponsorId });
+
+      console.log(sponsor, "Sponserr");
 
       if (sponsor) {
-        referId = sponsor?.UUID;
-        storedSponsorId = sponsorId;
+        referId = sponsor.UUID; // ✅ store sponsor UUID
       }
     }
+
+    // Create new user
     const user = new User({
       name,
-      referId, // ObjectId or null
-      sponsorId: storedSponsorId, // string or empty
+      referId, // UUID of sponsor (or null)
+      sponsorId, // UUID provided by user
       mobile,
       email,
       address,
@@ -110,17 +111,18 @@ exports.Register = async (req, res) => {
     await user.save();
 
     if (referId) {
-      const sponsor = await User.findById(referId);
+      const sponsor = await User.findOne({ UUID: referId });
+      console.log(sponsor, "Regferer");
 
-      console.log("Sponsor Data:", referId);
       if (sponsor) {
-        sponsor.referrals.push(user._id);
+        sponsor.referrals.push(user.UUID); // Store referred user’s UUID
         await sponsor.save();
       }
     }
 
+    // JWT Token
     const token = jwt.sign(
-      { id: user._id, referId: user.referId },
+      { id: user.UUID, referId: user.referId },
       process.env.JWT_SECRET || "bigweltInfotechPvt",
       { expiresIn: "1h" }
     );
@@ -148,7 +150,6 @@ exports.Register = async (req, res) => {
     });
   }
 };
-
 exports.LoadUser = async (req, res) => {
   try {
     const id = req.params.id;
@@ -316,27 +317,36 @@ exports.GetBankInfo = async (req, res) => {
 
 exports.getReferralTree = async (req, res) => {
   try {
-    const userId = req.params.id;
-
-    const buildTree = async (id) => {
-      const user = await User.findById(id).populate("referrals");
-      const tree = {
-        _id: user._id,
-        name: user.name,
-        referrals: [],
-      };
-
-      for (const referral of user.referrals) {
-        tree.referrals.push(await buildTree(referral._id));
-      }
-
-      return tree;
-    };
-
+    const userId = req.params.id; // e.g., LS870517
     const tree = await buildTree(userId);
+
+    if (!tree) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     res.status(200).json(tree);
   } catch (error) {
     console.error("Get referral tree error:", error);
     res.status(500).json({ message: "Failed to fetch referral tree" });
   }
+};
+
+const buildTree = async (uuid) => {
+  const user = await User.findOne({ UUID: uuid });
+  if (!user) return null;
+
+  const tree = {
+    UUID: user.UUID,
+    name: user.name,
+    referrals: [],
+  };
+
+  for (const referralUUID of user.referrals) {
+    const child = await buildTree(referralUUID);
+    if (child) {
+      tree.referrals.push(child);
+    }
+  }
+
+  return tree;
 };
