@@ -1,7 +1,7 @@
 const app = require("./app");
 const connectDatabase = require("./config/Database");
-const Admin = require("./models/adminModel"); // Import Admin model
-const bcrypt = require("bcryptjs"); // Needed if hashing here, but better to use model method
+const Admin = require("./models/adminModel");
+const bcrypt = require("bcryptjs"); 
 
 // Handling Uncaught Exception
 process.on("uncaughtException", (err) => {
@@ -17,7 +17,7 @@ const startServer = async () => {
 
     // --- Setup Default Admin --- //
     const defaultAdminUsername = "admin";
-    const defaultAdminPassword = "password123"; // Choose a secure default password
+    const defaultAdminPassword = "password123"; 
 
     const existingAdmin = await Admin.findOne({ username: defaultAdminUsername });
 

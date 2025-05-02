@@ -1,21 +1,17 @@
-import React from 'react'; // Import React if not already present
+import React from 'react'; 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './services/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute.jsx'; // Corrected import path with extension
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage'; // Actual component import
-import ProductsPage from './pages/ProductsPage'; // Actual component import
-import AddProductPage from './pages/AddProductPage'; // Actual component import
-import EditProductPage from './pages/EditProductPage'; // Actual component import
+import DashboardPage from './pages/DashboardPage'; 
+import ProductsPage from './pages/ProductsPage';
+import AddProductPage from './pages/AddProductPage'; 
+import EditProductPage from './pages/EditProductPage'; 
 
-// Remove the placeholder components and conditional assignments
-// function PlaceholderComponent({ title }) { ... }
-// if (!DashboardPage) ... etc.
 
 function AppContent() {
-  const { user, loading, isAdmin } = useAuth(); // Get user and isAdmin status
+  const { user, loading, isAdmin } = useAuth(); 
 
-  // Wait for auth state to load before rendering routes
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -26,10 +22,8 @@ function AppContent() {
 
   return (
     <Routes>
-      {/* Public Login Route */}
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Protected Admin Routes */}
       <Route
         path="/dashboard"
         element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}
@@ -47,10 +41,7 @@ function AppContent() {
         element={<ProtectedRoute><EditProductPage /></ProtectedRoute>}
       />
 
-      {/* Default route behavior:
-          - If logged in (and is admin because only admins can log in), go to dashboard.
-          - If not logged in, redirect to login.
-      */}
+    
       <Route
         path="*"
         element={

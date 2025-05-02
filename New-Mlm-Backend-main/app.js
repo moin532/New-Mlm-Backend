@@ -15,12 +15,12 @@ env.config({ path: "./config/config.env" });
 const userRoute = require("./routes/userRoute");
 const prdRoute = require("./routes/productsRoute");
 const profileRoute = require("./controller/ProfileController"); // Check if this path is correct, might be routes/ProfileRoute
-const adminRoute = require("./routes/adminRoute"); // Import the new admin route
+const adminRoute = require("./routes/adminRoute"); 
 
 app.use("/api/v1/", userRoute);
 app.use("/api/v1/", prdRoute);
 app.use("/api/v1/", profileRoute);
-app.use("/api/v1/", adminRoute); // Use the new admin route
+app.use("/api/v1/", adminRoute);
 app.use("/uploads", express.static("uploads"));
 
 module.exports = app;

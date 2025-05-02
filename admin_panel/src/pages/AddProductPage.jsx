@@ -7,7 +7,7 @@ function AddProductPage() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [stock, setStock] = useState(0);
-  const [images, setImages] = useState([]); // State to hold selected image files
+  const [images, setImages] = useState([]); 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -27,17 +27,17 @@ function AddProductPage() {
     formData.append('name', name);
     formData.append('description', description);
     formData.append('category', category);
-    formData.append('Stock', stock); // Ensure key matches backend ('Stock')
+    formData.append('Stock', stock); 
 
     // Append each image file
     images.forEach((image) => {
-      formData.append('images', image); // Key 'images' matches upload.array('images') in backend route
+      formData.append('images', image); 
     });
 
     try {
       await productService.addProduct(formData);
       alert('Product added successfully!');
-      navigate('/products'); // Redirect to products list after successful addition
+      navigate('/products'); 
     } catch (err) {
       console.error("Error adding product:", err);
       setError(err.message || 'Failed to add product.');
@@ -108,12 +108,11 @@ function AddProductPage() {
           <input
             id="images"
             type="file"
-            multiple // Allow multiple file selection
+            multiple 
             onChange={handleImageChange}
-            accept="image/*" // Accept only image files
+            accept="image/*" 
             disabled={loading}
           />
-          {/* Optional: Preview selected images */} 
           {images.length > 0 && (
             <div className="image-preview-container">
               <p>Selected files:</p>

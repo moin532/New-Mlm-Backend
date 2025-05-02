@@ -3,15 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import productService from '../services/productService';
 
 function EditProductPage() {
-  const { id } = useParams(); // Get product ID from URL
+  const { id } = useParams(); 
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [stock, setStock] = useState(0);
-  // Image editing is not implemented in this version
-  // const [images, setImages] = useState([]); 
+ 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -21,14 +20,12 @@ function EditProductPage() {
       setLoading(true);
       setError('');
       try {
-        // Use the updated service function to get product by ID (admin endpoint)
         const product = await productService.getProductById(id);
         if (product) {
           setName(product.name);
           setDescription(product.description);
           setCategory(product.category);
           setStock(product.Stock);
-          // Note: Existing images are not loaded for editing here
         } else {
           setError('Product not found.');
         }
@@ -52,14 +49,13 @@ function EditProductPage() {
       name,
       description,
       category,
-      Stock: stock, // Ensure key matches backend ('Stock')
-      // Image updates are not sent in this version
+      Stock: stock, 
     };
 
     try {
       await productService.updateProduct(id, updatedProductData);
       alert('Product updated successfully!');
-      navigate('/products'); // Redirect to products list
+      navigate('/products'); 
     } catch (err) {
       console.error(`Error updating product ${id}:`, err);
       setError(err.message || 'Failed to update product.');
@@ -131,11 +127,7 @@ function EditProductPage() {
           />
         </div>
 
-        {/* Image editing UI is omitted as it's not implemented */}
-        {/* <div className="form-group">
-          <label>Images</label>
-          <p className="text-sm text-gray-500">Image editing is not available in this version.</p>
-        </div> */}
+       
 
         <button type="submit" className="button primary" disabled={submitting}>
           {submitting ? 'Updating Product...' : 'Update Product'}

@@ -12,16 +12,13 @@ function ProductsPage() {
       setLoading(true);
       setError('');
       try {
-        // Use the updated service function that calls the admin endpoint
         const fetchedProducts = await productService.getAllProducts();
-        setProducts(fetchedProducts || []); // Ensure products is always an array
+        setProducts(fetchedProducts || []); 
       } catch (err) {
         console.error("Error fetching products:", err);
         setError(err.message || 'Failed to load products.');
-        // If unauthorized, the service should handle logout, but we can also redirect
         if (err.message.includes("Unauthorized")) {
-            // Optionally redirect to login or show specific message
-            // navigate('/login'); // Requires importing useNavigate
+           
         }
       } finally {
         setLoading(false);
@@ -35,7 +32,6 @@ function ProductsPage() {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         await productService.deleteProduct(id);
-        // Refresh the product list after deletion
         setProducts(products.filter(product => product._id !== id));
         alert('Product deleted successfully!');
       } catch (err) {
@@ -79,7 +75,7 @@ function ProductsPage() {
                 <td>
                   {product.images && product.images.length > 0 ? (
                     <img 
-                      src={`http://localhost:4000${product.images[0].url}`} // Assuming backend serves uploads from root
+                      src={`http://localhost:4000${product.images[0].url}`} 
                       alt={product.name}
                       className="product-thumbnail"
                     />
