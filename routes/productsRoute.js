@@ -1,7 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const { authMiddle, authorizeRoles } = require("../middleware/auth");
+const {
+  authMiddle,
+  authorizeRoles,
+  authorizeAdmin,
+} = require("../middleware/auth");
 const {
   createProduct,
   getAllPRoducts,
@@ -11,11 +15,18 @@ const {
   cretePrdReview,
   getAllAdminPrd,
 } = require("../controller/productController");
+const upload = require("../middleware/upload");
 
-router.route("/product/new").post(authMiddle, createProduct);
+router.post(
+  "/product/new",
+  upload.array("images", 5),
+
+  createProduct
+);
+
 router.route("/product/all").get(getAllPRoducts);
 
-router.route("/admin/products").get(authMiddle, getAllAdminPrd);
+router.route("/admin/products").get(getAllAdminPrd);
 router.route("/product/:id").get(getSinglePrd);
 
 router.route("/admin/product/:id").put(UpdateProduct);

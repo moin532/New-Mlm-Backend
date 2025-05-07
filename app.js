@@ -15,10 +15,14 @@ env.config({ path: "./config/config.env" });
 const userRoute = require("./routes/userRoute");
 const prdRoute = require("./routes/productsRoute");
 const profileRoute = require("./controller/ProfileController");
+const orderRoute = require("./routes/orderRoute");
+const fundRoute = require("./routes/fundRoute");
 
 app.use("/api/v1/", userRoute);
 app.use("/api/v1/", prdRoute);
 app.use("/api/v1/", profileRoute);
+app.use("/api/v1/", orderRoute);
+app.use("/api/v1/", fundRoute);
 app.use("/uploads", express.static("uploads"));
 
 module.exports = app;

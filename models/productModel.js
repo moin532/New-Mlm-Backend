@@ -1,3 +1,4 @@
+// models/productModel.js
 const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema({
@@ -6,25 +7,20 @@ const productSchema = new mongoose.Schema({
     required: [true, "Please Enter product Name"],
     trim: true,
   },
-
   description: {
     type: String,
     required: [true, "Please Enter product Description"],
   },
-
-  likes: {
-    type: Number,
+  price: {
+    type: "Number",
   },
-
-  ratings: {
-    type: Number,
-    default: 0,
+  discountprice: {
+    type: "Number",
   },
   images: [
     {
       public_id: {
         type: String,
-        // required: true,
       },
       url: {
         type: String,
@@ -36,7 +32,6 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please Enter Product Category"],
   },
-
   Stock: {
     type: Number,
     required: [true, "Please Enter product Stock"],
@@ -47,39 +42,25 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-
   reviews: [
     {
       user: {
         type: mongoose.Schema.ObjectId,
         ref: "User",
-        // required: true,
       },
-      name: {
-        type: String,
-        // required: true,
-      },
-      rating: {
-        type: Number,
-        // required: true,
-      },
-      comment: {
-        type: String,
-        // required: true,
-      },
+      name: String,
+      rating: Number,
+      comment: String,
     },
   ],
-
   user: {
     type: mongoose.Schema.ObjectId,
-    ref: "UserEcom",
-    // required: true,
+    ref: "UserMLmLipo",
   },
-
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-module.exports = mongoose.model("productsEcom", productSchema);
+module.exports = mongoose.model("LLM Product", productSchema);

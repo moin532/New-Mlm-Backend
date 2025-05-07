@@ -1,11 +1,10 @@
 // models/User.js
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     sponsorId: { type: String, required: false },
-
     UUID: { type: String },
     mobile: { type: String, required: true, unique: true },
     email: { type: String, required: true },
@@ -23,6 +22,22 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: { type: String, required: false },
     active: { type: String, default: "false" },
     referId: { type: String, default: null },
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
+    orders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Order",
+      },
+    ],
+    role: {
+      type: String,
+      default: "user",
+    },
 
     referrals: [
       {

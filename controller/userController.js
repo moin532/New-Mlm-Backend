@@ -1,7 +1,7 @@
 const User = require("../models/userModel");
 const Profile = require("../models/myProfileInfo");
 const BankInfo = require("../models/BankInformation");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 exports.LoginUser = async (req, res, next) => {
@@ -165,6 +165,15 @@ exports.LoadUser = async (req, res) => {
       success: false,
       err: error.message,
     });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password"); // hide sensitive info
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -349,4 +358,30 @@ const buildTree = async (uuid) => {
   }
 
   return tree;
+};
+
+exports.getDirectReferrals = async (req, res) => {
+  try {
+    const userId = req.params.id; // e.g., LS870517
+    const user = await User.findOne({ UUID: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Fetch only direct referral users
+    const referrals = await User.find({ UUID: { $in: user.referrals } });
+
+    res.status(200).json({
+      UUID: user.UUID,
+      name: user.name,
+      referrals: referrals.map((ref) => ({
+        UUID: ref.UUID,
+        name: ref.name,
+      })),
+    });
+  } catch (error) {
+    console.error("Direct referrals fetch error:", error);
+    res.status(500).json({ message: "Failed to fetch referrals" });
+  }
 };

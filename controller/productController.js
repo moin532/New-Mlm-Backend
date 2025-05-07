@@ -1,47 +1,38 @@
+// controllers/productController.js
 const Product = require("../models/productModel");
-const cloudinary = require("cloudinary");
-const path = require("path");
 
 exports.createProduct = async (req, res) => {
   try {
-    let images = [];
-
-    if (typeof req.body.images === "string") {
-      images.push(req.body.images);
-    } else {
-      images = req.body.images;
+    const { name, description, category, Stock, id, price, discountprice } =
+      req.body;
+    const files = req.files;
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: "No images uploaded" });
     }
+    const images = files.map((file) => ({
+      public_id: file.filename,
+      url: `${req.protocol}://${req.get("host")}/uploads/${file.filename}`,
+    }));
+    const product = new Product({
+      name,
+      description,
+      category,
+      Stock,
+      images,
+      price,
+      discountprice,
+      user: id || null, // If auth implemented
+    });
 
-    const imagesLinks = [];
-
-    for (let i = 0; i < images.length; i++) {
-      const result = await cloudinary.v2.uploader.upload(images[i], {
-        folder: "products",
-      });
-
-      imagesLinks.push({
-        public_id: result.public_id,
-        url: result.secure_url,
-      });
-    }
-
-    req.body.images = imagesLinks;
-    // req.body.user = req.user.id;
-
-    req.body.seller_id = req.seller._id;
-    console.log(req.body, "ssssss");
-    const product = await Product.create(req.body);
+    await product.save();
 
     res.status(201).json({
-      succes: true,
+      success: true,
+      message: "Product created successfully",
       product,
     });
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({
-      success: false,
-      err: error,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
