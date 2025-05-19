@@ -1,10 +1,8 @@
-// routes/profile.js
 const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/upload");
 const Profile = require("../models/myProfileInfo");
-// http://localhost:4000/uploads/1746082767275-700115144.png
-// Upload multiple images
+
 router.post(
   "/upload",
   upload.fields([
@@ -16,36 +14,117 @@ router.post(
     { name: "nomineeAadhaarCardFrontImage" },
     { name: "nomineeAadhaarCardBackImage" },
     { name: "nomineeBankDocumentImage" },
+    { name: "video" },
+    { name: "myProfile" },
   ]),
-
   async (req, res) => {
     try {
       const files = req.files;
+      const userId = req.body.userId;
 
-      console.log("Uploaded files:", files);
+      const normalizePath = (p) => p?.replace(/\\/g, "/");
 
-      const profile = new Profile({
-        userId: req.body.userId,
-        panCardImage: files.panCardImage?.[0]?.path,
-        aadhaarCardFrontImage: files.aadhaarCardFrontImage?.[0]?.path,
-        aadhaarCardBackImage: files.aadhaarCardBackImage?.[0]?.path,
-        bankDocumentImage: files.bankDocumentImage?.[0]?.path,
+      let existingProfile = await Profile.findOne({ userId });
+
+      const profileData = {
+        userId: userId,
+        myintro: normalizePath(
+          files.video?.[0]?.path || existingProfile?.video
+        ),
+        myimage: normalizePath(
+          files.myProfile?.[0]?.path || existingProfile?.myProfile
+        ),
+        panCardImage:
+          files.panCardImage?.[0]?.path || existingProfile?.panCardImage,
+        aadhaarCardFrontImage:
+          files.aadhaarCardFrontImage?.[0]?.path ||
+          existingProfile?.aadhaarCardFrontImage,
+        aadhaarCardBackImage:
+          files.aadhaarCardBackImage?.[0]?.path ||
+          existingProfile?.aadhaarCardBackImage,
+        bankDocumentImage:
+          files.bankDocumentImage?.[0]?.path ||
+          existingProfile?.bankDocumentImage,
         nominee: {
-          name: req.body.nomineeName,
-          relation: req.body.nomineeRelation,
-          panCardNumber: req.body.nomineePanCardNumber,
-          aadhaarCardNumber: req.body.nomineeAadhaarCardNumber,
-          panCardImage: files.nomineePanCardImage?.[0]?.path,
-          aadhaarCardFrontImage: files.nomineeAadhaarCardFrontImage?.[0]?.path,
-          aadhaarCardBackImage: files.nomineeAadhaarCardBackImage?.[0]?.path,
-          bankDocumentImage: files.nomineeBankDocumentImage?.[0]?.path,
+          name: req.body.nomineeName || existingProfile?.nominee?.name,
+          relation:
+            req.body.nomineeRelation || existingProfile?.nominee?.relation,
+          panCardNumber:
+            req.body.nomineePanCardNumber ||
+            existingProfile?.nominee?.panCardNumber,
+          aadhaarCardNumber:
+            req.body.nomineeAadhaarCardNumber ||
+            existingProfile?.nominee?.aadhaarCardNumber,
+          panCardImage:
+            files.nomineePanCardImage?.[0]?.path ||
+            existingProfile?.nominee?.panCardImage,
+          aadhaarCardFrontImage:
+            files.nomineeAadhaarCardFrontImage?.[0]?.path ||
+            existingProfile?.nominee?.aadhaarCardFrontImage,
+          aadhaarCardBackImage:
+            files.nomineeAadhaarCardBackImage?.[0]?.path ||
+            existingProfile?.nominee?.aadhaarCardBackImage,
+          bankDocumentImage:
+            files.nomineeBankDocumentImage?.[0]?.path ||
+            existingProfile?.nominee?.bankDocumentImage,
         },
+      };
+
+      console.log(profileData);
+      const profile = await Profile.findOneAndUpdate({ userId }, profileData, {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
       });
 
-      await profile.save();
-      res.status(201).json({ message: "Profile saved successfully", profile });
+      res
+        .status(201)
+        .json({ message: "Profile uploaded/updated successfully", profile });
     } catch (error) {
       console.error(error);
+      res.status(500).json({ message: "Upload failed", error });
+    }
+  }
+);
+
+router.post(
+  "/upload/media",
+  upload.fields([
+    { name: "myProfile", maxCount: 1 },
+    { name: "video", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const files = req.files;
+      const userId = req.body.userId;
+
+      if (!userId) {
+        return res.status(400).json({ message: "userId is required" });
+      }
+
+      const normalizePath = (p) => p?.replace(/\\/g, "/");
+
+      const updateData = {
+        ...(files.myProfile && {
+          myProfile: normalizePath(files.myProfile[0].path),
+        }),
+        ...(files.video && {
+          video: normalizePath(files.video[0].path),
+        }),
+      };
+
+      const profile = await Profile.findOneAndUpdate(
+        { userId },
+        { $set: updateData },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      );
+
+      res.status(200).json({
+        message: "Media uploaded successfully",
+        profile,
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
       res.status(500).json({ message: "Upload failed", error });
     }
   }

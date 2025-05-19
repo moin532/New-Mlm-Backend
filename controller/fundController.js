@@ -104,5 +104,38 @@ const GetFundRequest = async (req, res) => {
     });
   }
 };
+const UpdateAdminFund = async (req, res) => {
+  try {
+    const { status } = req.body;
 
-module.exports = { addFundRequest, updateFundRequest, GetFundRequest };
+    const message = req.body.rejectReason;
+
+    const updatedFund = await FundRequest.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...(message && { message }),
+        ...(status && { status }),
+      },
+      { new: true }
+    );
+
+    if (!updatedFund) {
+      return res.status(404).json({ message: "Fund request not found" });
+    }
+
+    res.status(200).json({
+      message: "Fund request updated successfully",
+      data: updatedFund,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update fund request" });
+  }
+};
+
+module.exports = {
+  addFundRequest,
+  updateFundRequest,
+  GetFundRequest,
+  UpdateAdminFund,
+};

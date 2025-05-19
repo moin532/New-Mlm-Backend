@@ -3,7 +3,8 @@ const Profile = require("../models/myProfileInfo");
 const BankInfo = require("../models/BankInformation");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const nodemailer = require("nodemailer");
+const randomstring = require("randomstring");
 exports.LoginUser = async (req, res, next) => {
   try {
     const { UUID, password } = req.body;
@@ -383,5 +384,357 @@ exports.getDirectReferrals = async (req, res) => {
   } catch (error) {
     console.error("Direct referrals fetch error:", error);
     res.status(500).json({ message: "Failed to fetch referrals" });
+  }
+};
+
+// exports.getReferralStats = async (req, res) => {
+//   try {
+//     const userId = req.params.id; // Example: LS870517
+
+//     const user = await User.findOne({ UUID: userId });
+
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     const directReferrals = await User.find({ UUID: { $in: user.referrals } });
+
+//     let downlineCount = 0;
+//     const queue = [...user.referrals];
+
+//     while (queue.length > 0) {
+//       const currentId = queue.shift();
+//       const currentUser = await User.findOne({ UUID: currentId }, "referrals");
+
+//       if (currentUser && currentUser.referrals?.length > 0) {
+//         downlineCount += currentUser.referrals.length;
+//         queue.push(...currentUser.referrals);
+//       }
+//     }
+
+//     return res.status(200).json({
+//       UUID: user.UUID,
+//       name: user.name,
+//       directCount: user.referrals.length,
+//       downlineCount: downlineCount,
+//     });
+//   } catch (error) {
+//     console.error("Referral stats error:", error);
+//     return res.status(500).json({ message: "Failed to fetch referral stats" });
+//   }
+// };
+
+// exports.getFullReferralTree = async (req, res) => {
+//   try {
+//     const userId = req.params.id; // Example: LS870517
+
+//     const user = await User.findOne({ UUID: userId });
+
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     // Fetch sponsor's name for the main user
+//     let sponsorName = null;
+//     if (user.sponsorId) {
+//       const sponsor = await User.findOne({ UUID: user.sponsorId });
+//       if (sponsor) {
+//         sponsorName = sponsor.name;
+//       }
+//     }
+
+//     // Fetch direct referrals with sponsorName
+//     const directReferrals = await Promise.all(
+//       user.referrals.map(async (refId) => {
+//         const referralUser = await User.findOne({ UUID: refId });
+//         if (!referralUser) return null;
+
+//         let referralSponsorName = null;
+//         if (referralUser.sponsorId) {
+//           const sponsor = await User.findOne({ UUID: referralUser.sponsorId });
+//           if (sponsor) {
+//             referralSponsorName = sponsor.name;
+//           }
+//         }
+
+//         return {
+//           ...referralUser.toObject(),
+//           sponsorName: referralSponsorName,
+//         };
+//       })
+//     );
+
+//     // BFS to get all downline users with sponsorName
+//     const visited = new Set();
+//     const allDownlineUsers = [];
+//     const queue = [...user.referrals];
+
+//     while (queue.length > 0) {
+//       const currentId = queue.shift();
+//       if (visited.has(currentId)) continue;
+//       visited.add(currentId);
+
+//       const currentUser = await User.findOne({ UUID: currentId });
+//       if (currentUser) {
+//         // Fetch sponsor name
+//         let currentSponsorName = null;
+//         if (currentUser.sponsorId) {
+//           const sponsor = await User.findOne({ UUID: currentUser.sponsorId });
+//           if (sponsor) {
+//             currentSponsorName = sponsor.name;
+//           }
+//         }
+
+//         allDownlineUsers.push({
+//           ...currentUser.toObject(),
+//           sponsorName: currentSponsorName,
+//         });
+
+//         if (currentUser.referrals?.length > 0) {
+//           queue.push(...currentUser.referrals);
+//         }
+//       }
+//     }
+
+//     return res.status(200).json({
+//       UUID: user.UUID,
+//       name: user.name,
+//       sponsorId: user.sponsorId,
+//       sponsorName: sponsorName,
+//       directReferrals: directReferrals.filter(Boolean),
+//       downlineUsers: allDownlineUsers,
+//     });
+//   } catch (error) {
+//     console.error("Referral tree error:", error);
+//     return res.status(500).json({ message: "Failed to fetch referral tree" });
+//   }
+// };
+
+// otp
+
+exports.getReferralStats = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findOne({ UUID: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Step 1: Collect all users to avoid repeated DB calls
+    const allUsers = await User.find({}, "UUID referrals");
+
+    // Create a fast lookup map
+    const userMap = new Map();
+    allUsers.forEach((u) => userMap.set(u.UUID, u.referrals));
+
+    // Step 2: Traverse the referral tree using the map
+    let downlineCount = 0;
+    const visited = new Set();
+    const queue = [...user.referrals];
+
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+
+      if (visited.has(currentId)) continue;
+      visited.add(currentId);
+
+      const referrals = userMap.get(currentId) || [];
+
+      downlineCount += referrals.length;
+      queue.push(...referrals);
+    }
+
+    return res.status(200).json({
+      UUID: user.UUID,
+      name: user.name,
+      directCount: user.referrals.length,
+      downlineCount: downlineCount,
+    });
+  } catch (error) {
+    console.error("Referral stats error:", error);
+    return res.status(500).json({ message: "Failed to fetch referral stats" });
+  }
+};
+
+exports.getFullReferralTree = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Step 1: Fetch all users once
+    const allUsers = await User.find({}).lean();
+
+    // Step 2: Create fast lookup maps
+    const userMap = new Map();
+    allUsers.forEach((u) => userMap.set(u.UUID, u));
+
+    const user = userMap.get(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const getSponsorName = (sponsorId) => {
+      const sponsor = userMap.get(sponsorId);
+      return sponsor ? sponsor.name : null;
+    };
+
+    // Step 3: Get direct referrals
+    const directReferrals = (user.referrals || [])
+      .map((refId) => {
+        const refUser = userMap.get(refId);
+        if (!refUser) return null;
+
+        return {
+          ...refUser,
+          sponsorName: getSponsorName(refUser.sponsorId),
+        };
+      })
+      .filter(Boolean); // Remove nulls
+
+    // Step 4: Traverse downline (BFS)
+    const visited = new Set();
+    const allDownlineUsers = [];
+    const queue = [...user.referrals];
+
+    while (queue.length > 0) {
+      const currentId = queue.shift();
+      if (visited.has(currentId)) continue;
+      visited.add(currentId);
+
+      const currentUser = userMap.get(currentId);
+      if (currentUser) {
+        allDownlineUsers.push({
+          ...currentUser,
+          sponsorName: getSponsorName(currentUser.sponsorId),
+        });
+
+        if (currentUser.referrals?.length > 0) {
+          queue.push(...currentUser.referrals);
+        }
+      }
+    }
+
+    return res.status(200).json({
+      UUID: user.UUID,
+      name: user.name,
+      sponsorId: user.sponsorId,
+      sponsorName: getSponsorName(user.sponsorId),
+      directReferrals,
+      downlineUsers: allDownlineUsers,
+    });
+  } catch (error) {
+    console.error("Referral tree error:", error);
+    return res.status(500).json({ message: "Failed to fetch referral tree" });
+  }
+};
+
+let otpStore = {};
+
+// Create transporter
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.SMTP_MAIL,
+    pass: process.env.SMTP_PASSWORD,
+  },
+});
+// Send OTP Controller
+exports.sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email is required" });
+    }
+
+    const otp = randomstring.generate({ length: 4, charset: "numeric" });
+    otpStore[email] = otp;
+
+    const mailOptions = {
+      from: process.env.SMTP_MAIL,
+      to: email,
+      subject: "Your OTP Code",
+      text: `${otp} is your OTP for Register  at Lipu Pvt Ltd. Never share it with anyone.`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        return res.status(500).json({ success: false, message: error.message });
+      }
+
+      res.status(200).json({ success: true, message: "OTP sent successfully" });
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
+  }
+};
+// Verify OTP Controller
+exports.VerifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email and OTP are required" });
+    }
+
+    if (otpStore[email] !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    // OTP is valid, delete from store
+    delete otpStore[email];
+
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+exports.AdminAddRank = async (req, res) => {
+  try {
+    const { rank } = req.body;
+
+    // Validate input
+    if (!rank) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Rank is required" });
+    }
+
+    // Find and update user by ID
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { rank } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Rank updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };

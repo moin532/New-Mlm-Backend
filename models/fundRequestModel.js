@@ -15,7 +15,7 @@ const FundRequestModel = new mongoose.Schema({
   Amount: {
     type: String,
   },
-  messgae: {
+  message: {
     type: String,
   },
   selectBank: {

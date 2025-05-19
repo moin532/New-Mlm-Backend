@@ -8,6 +8,8 @@ const multipleUpload = upload.fields([
   { name: "aadhaarCardFrontImage", maxCount: 1 },
   { name: "aadhaarCardBackImage", maxCount: 1 },
   { name: "bankDocumentImage", maxCount: 1 },
+  { name: "video", maxCount: 1 },
+  { name: "myProfile", maxCount: 1 },
 
   // Nominee Images
   { name: "nomineePanCardImage", maxCount: 1 },

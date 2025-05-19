@@ -20,8 +20,24 @@ const userSchema = new mongoose.Schema(
     pincode: { type: String, required: false },
     gender: { type: String, required: false },
     dateOfBirth: { type: String, required: false },
+    rank: { type: String, default: "free" },
+
     active: { type: String, default: "false" },
-    referId: { type: String, default: null },
+    ActiveDate: { type: String }, // or Date if you prefer
+    kycVerified: { type: String, default: "Not Verified" },
+    block: { type: String, default: "No" },
+
+    ProfileImg: [
+      {
+        public_id: {
+          type: String,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -4,13 +4,14 @@ const profileSchema = new mongoose.Schema(
   {
     userId: {
       type: String,
-
       required: true,
     },
     panCardImage: { type: String },
     aadhaarCardFrontImage: { type: String },
     aadhaarCardBackImage: { type: String },
     bankDocumentImage: { type: String }, // Cancel Cheque or Passbook
+    myimage: { type: String },
+    myintro: { type: String },
 
     nominee: {
       name: { type: String },

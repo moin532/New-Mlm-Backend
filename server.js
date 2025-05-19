@@ -1,12 +1,15 @@
 const app = require("./app");
 const connectDatabase = require("./config/Database.js");
 const cloudinary = require("cloudinary");
+const connectSqlDatabase = require("./config/sqlDatabase.js");
 
 app.get("/", (req, res) => {
   res.send("backend Working properly");
 });
 
 connectDatabase();
+
+// connectSqlDatabase();
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
